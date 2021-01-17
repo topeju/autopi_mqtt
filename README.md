@@ -20,6 +20,46 @@ The AutoPi services need to be customised to use the MQTT returner. Go through t
 
 If at any point the `my_mqtt` returner does not show up, you will need to restart the AutoPi minion. You can do this e.g. via the Terminal in the upper right hand corner with the command `minionutil.request_restart immediately=true`, and wait for a minute or so for the service to restart.
 
+### `my_mqtt_manager`
+
+On the Workers tab, create a new Worker with:
+ * Name: `upload`
+ * Start delay: 5 seconds (exact value shouldn't matter, probably, I just try to keep this from conflicting with the engine startup)
+ * Interval: 1 sec (or as desired)
+ * Loop: -1
+ * Order: 1
+ * Enabled: checked
+ * Transactional: not checked
+ * Kill on success: not checked
+ * Suppress exceptions: checked
+ * Auto start: checked
+ * Add new Workflow with:
+   * Handler: `upload`
+   * Args: `[]`
+   * kwargs: `{}`
+
+On the Reactors tab, you may create new Reactors to handle engine start and stop scenarios. However, these have not been implemented in the `my_mqtt_cache` yet, so these will not do anything beyond log messages claiming the MQTT service is waking up or going to sleep:
+
+Wake on engine start:
+ * Name: `wake_on_engine_start`
+ * Regex: `^vehicle/engine/running`
+ * Enabled: checked
+ * No conditions
+ * Add new Action:
+   * Handler: `wake`
+   * Args: `[]`
+   * kwargs: `{}`
+
+Sleep on engine stop:
+ * Name: `sleep_on_engine_stop`
+ * Regex: `^vehicle/engine/stopped`
+ * Enabled: checked
+ * No conditions
+ * Add new Action:
+   * Handler: `sleep`
+   * Args: `[]`
+   * kwargs: `{}`
+
 ### `acc_manager`
 
 On the Hooks tab, create a new Hook named `my_mqtt` with:
@@ -93,3 +133,5 @@ This setup publishes all items you have configured through the services above bo
 ## Notes
 
 The code here is largely based on [autopi-io/autopi-core](https://github.com/autopi-io/autopi-core), particularly its [cloud_manager.py](https://github.com/autopi-io/autopi-core/blob/master/src/salt/base/ext/_engines/cloud_manager.py), [cloud_cache.py](https://github.com/autopi-io/autopi-core/blob/master/src/salt/base/ext/_utils/cloud_cache.py), and [cloud_returner.py](https://github.com/autopi-io/autopi-core/blob/master/src/salt/base/ext/_returners/cloud_returner.py).
+
+I have sometimes observed AutoPi having trouble loading the custom code, but don't know why this happens. It seems to be resolved by restarting the Minion (see instructions above under "Services configuration").

@@ -138,7 +138,7 @@ def start(**settings):
 
         # Setup cache
         options = __salt__["config.get"]("my_mqtt_cache", {})
-        options["endpoint"] = settings["endpoint"]
+        options["endpoint"] = settings.get("endpoint", {})
         cache.setup(**options)
 
         # Initialize and run message processor
