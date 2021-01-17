@@ -22,6 +22,29 @@ If at any point the `my_mqtt` returner does not show up, you will need to restar
 
 ### `my_mqtt_manager`
 
+On the Hooks tab, create one or three (the last two aren't really necessary at the moment, see below) new hooks:
+ * Upload:
+   * Name: `upload`
+   * Type: handler
+   * Function: `my_mqtt_manager.upload_handler`
+   * Enabled: checked
+   * Args: `[]`
+   * Kwargs: `{}`
+ * Sleep:
+   * Name: `sleep`
+   * Type: handler
+   * Function: `my_mqtt_manager.sleep_handler`
+   * Enabled: checked
+   * Args: `[]`
+   * Kwargs: `{}`
+ * Wake:
+   * Name: `wake`
+   * Type: handler
+   * Function: `my_mqtt_manager.wake_handler`
+   * Enabled: checked
+   * Args: `[]`
+   * Kwargs: `{}`
+
 On the Workers tab, create a new Worker with:
  * Name: `upload`
  * Start delay: 5 seconds (exact value shouldn't matter, probably, I just try to keep this from conflicting with the engine startup)
