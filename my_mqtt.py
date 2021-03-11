@@ -6,7 +6,6 @@ try:
 except ImportError:
     HAS_REDIS = False
 
-from cloud_cache import CloudCache
 from my_mqtt_cache import MqttCache
 from salt.returners import get_returner_options
 from salt.utils import jid
@@ -24,37 +23,6 @@ def __virtual__():
                       "redis python client is not installed."
 
     return __virtualname__
-
-
-def _get_options(ret=None):
-
-    if log.isEnabledFor(logging.DEBUG):
-        log.debug("Getting options for: {:}".format(ret))
-
-    defaults = {
-        "host": "localhost",
-        "port": 6379,
-        "db": 1
-    }
-
-    attrs = {
-        "host": "redis_host",
-        "port": "redis_port",
-        "db": "redis_db"
-    }
-
-    _options = get_returner_options(
-        "cloud_cache",
-        ret,
-        attrs,
-        __salt__=__salt__,
-        __opts__=__opts__,
-        defaults=defaults)
-
-    if log.isEnabledFor(logging.DEBUG):
-        log.debug("Generated options: {:}".format(_options))
-
-    return _options
 
 
 def _get_mqtt_options(ret=None):
@@ -86,24 +54,6 @@ def _get_mqtt_options(ret=None):
         log.debug("Generated options: {:}".format(_options))
 
     return _options
-
-
-def _get_cloud_cache_for(ret):
-
-    # Get cloud cache instance from context if present
-    _cloud_cache = __context__.get("cloud_cache", None)
-
-    # Create new instance if no existing found
-    if _cloud_cache == None:
-        options = _get_options(ret)
-        log.info("Creating cloud cache instance with Redis options: {:}".format(options))
-
-        _cloud_cache = CloudCache().setup(redis=options)
-        __context__["cloud_cache"] = _cloud_cache
-    elif log.isEnabledFor(logging.DEBUG):
-        log.debug("Re-using cloud cache instance found in context")
-
-    return _cloud_cache
 
 
 def _get_mqtt_cache_for(ret):
@@ -171,7 +121,7 @@ def _prepare_recursively(result, kind, timestamp=None):
 
 def returner(ret):
     """
-    Return a result to cloud and MQTT caches.
+    Return a result to the MQTT cache.
     """
 
     returner_job(ret)
@@ -179,7 +129,7 @@ def returner(ret):
 
 def returner_job(job):
     """
-    Return a Salt job result to cloud and MQTT caches.
+    Return a Salt job result to the MQTT cache.
     """
 
     if not job or not job.get("jid", None):
@@ -200,9 +150,6 @@ def returner_job(job):
 
     res = _prepare_recursively(ret, kind, timestamp=None)
 
-    cloud_cache = _get_cloud_cache_for(job)
-    for r in res:
-        cloud_cache.enqueue(r)
     mqtt_cache = _get_mqtt_cache_for(job)
     for r in res:
         mqtt_cache.enqueue(r)
@@ -210,7 +157,7 @@ def returner_job(job):
 
 def returner_event(event):
     """
-    Return an event to cloud and MQTT caches.
+    Return an event to the MQTT cache.
     """
 
     if not event:
@@ -229,7 +176,7 @@ def returner_event(event):
 
 def returner_data(data, kind, **kwargs):
     """
-    Return any arbitrary data structure to cloud and MQTT caches.
+    Return any arbitrary data structure to the MQTT cache.
     """
 
     if not data:
@@ -243,10 +190,6 @@ def returner_data(data, kind, **kwargs):
         return
 
     res = _prepare_recursively(data, kind)
-
-    cloud_cache = _get_cloud_cache_for(kwargs)
-    for r in res:
-        cloud_cache.enqueue(r)
 
     mqtt_cache = _get_mqtt_cache_for(kwargs)
     for r in res:
