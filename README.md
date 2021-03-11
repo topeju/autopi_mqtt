@@ -1,6 +1,6 @@
 # autopi_mqtt
 
-MQTT returner, cache and management service for [AutoPi](https://www.autopi.io/). This can be used to replace the default `cloud` returner, and in fact also calls the cloud returner so that all data is sent to both MQTT and the AutoPi cloud.
+MQTT returner, cache and management service for [AutoPi](https://www.autopi.io/). As of AutoPi version 2021.03.10, AutoPi can call multiple returners, so the support to publish data both to MQTT and the AutoPi cloud has been removed. The same AutoPi version also adds support for MQTT natively, but I have not been able to get it to work yet, and in any case the configuration available is somewhat limited.
 
 You will obviously need an MQTT broker set up somewhere -- setting one up is outside the scope of this documentation (see, e.g., [Mosquitto](https://mosquitto.org/)). This service does not need to be continuously connected to the MQTT broker, but will queue data in the Redis cache in AutoPi and publishes it when it is able to connect.
 
@@ -93,7 +93,7 @@ On the Hooks tab, create a new Hook named `my_mqtt` with:
 * Args: `[]`
 * Kwargs: `{}`
 
-On the Workers tab, open the `xyz_logger` worker, and in its workflow, change the returner from `cloud` to `my_mqtt`.
+On the Workers tab, open the `xyz_logger` worker, and in its workflow, add the `my_mqtt` returner to the list of returners.
 
 ### `event_reactor`
 
@@ -108,7 +108,7 @@ On the Hooks tab, create a new Hook named `my_mqtt` with:
 On the Reactors tab, create a new reactor with:
 * Name: `mqtt_upload_on_event`
 * Regex: `^system/power/(sleep|hibernate|reboot)`
-* Description: Upload data to MQTT and the cloud
+* Description: Upload data to MQTT
 * Order: 10
 * Keyword resolve: not checked
 * Enabled: checked
@@ -123,7 +123,7 @@ On the Reactors tab, create a new reactor with:
 
 This reactor triggers AutoPi to upload the data before the system goes to sleep.
 
-Open the `cache_events` reactor, and in its action, change the returner from `cloud` to `my_mqtt`.
+Open the `cache_events` reactor, and in its action, add the `my_mqtt` returner to the list of returners.
 
 ### `obd_manager`
 
@@ -135,7 +135,7 @@ On the Hooks tab, create a new Hook named `my_mqtt` with:
 * Args: `[]`
 * Kwargs: `{}`
 
-Go to Car Explorer -> Loggers, and edit all of your loggers to use the `my_mqtt` returner. You will need to click the logger to edit it, then press the plus button next to "Advanced (click to show)" to be able to edit the returner.
+Go to Car Explorer -> Loggers, and edit all of your loggers to add the `my_mqtt` returner. You will need to click the logger to edit it, then press the plus button next to "Advanced (click to show)" to be able to edit the returner.
 
 ### `tracking_manager`
 
@@ -147,14 +147,14 @@ On the Hooks tab, create a new Hook named `my_mqtt` with:
 * Args: `[ "track" ]`
 * Kwargs: `{}`
 
-On the Workers tab, open the `poll_logger` worker, and in its workflow, change the returner from `cloud` to `my_mqtt`.
+On the Workers tab, open the `poll_logger` worker, and in its workflow, add the `my_mqtt` returner to the list of returners.
 
 ## Operation
 
-This setup publishes all items you have configured through the services above both to the AutoPi cloud and to the MQTT broker you have configured. The published items will use the `topic_root` configured in `my_mqtt_cache.py` as the first part of the publish topic, and the rest will be the type of item that is logged. For example, through the `tracking_manager`, you will get items logged in the `topic_root/track.pos` topic.
+This setup publishes all items you have configured through the services above to the MQTT broker you have configured. The published items will use the `topic_root` configured in `my_mqtt_cache.py` as the first part of the publish topic, and the rest will be the type of item that is logged. For example, through the `tracking_manager`, you will get items logged in the `topic_root/track.pos` topic.
 
 ## Notes
 
-The code here is largely based on [autopi-io/autopi-core](https://github.com/autopi-io/autopi-core), particularly its [cloud_manager.py](https://github.com/autopi-io/autopi-core/blob/master/src/salt/base/ext/_engines/cloud_manager.py), [cloud_cache.py](https://github.com/autopi-io/autopi-core/blob/master/src/salt/base/ext/_utils/cloud_cache.py), and [cloud_returner.py](https://github.com/autopi-io/autopi-core/blob/master/src/salt/base/ext/_returners/cloud_returner.py).
+The code here is largely based on [autopi-io/autopi-core](https://github.com/autopi-io/autopi-core), particularly its [cloud_manager.py](https://github.com/autopi-io/autopi-core/blob/master/src/salt/base/ext/_engines/cloud_manager.py), [cloud_cache.py](https://github.com/autopi-io/autopi-core/blob/master/src/salt/base/ext/_utils/cloud_cache.py), and [cloud_returner.py](https://github.com/autopi-io/autopi-core/blob/master/src/salt/base/ext/_returners/cloud_returner.py). This returner also uses the Redis cache (database 2, whereas the AutoPi cloud uses database 1) to store the data until it can be published to the MQTT broker.
 
 I have sometimes observed AutoPi having trouble loading the custom code, but don't know why this happens. It seems to be resolved by restarting the Minion (see instructions above under "Services configuration").
