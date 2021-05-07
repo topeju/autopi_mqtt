@@ -25,12 +25,18 @@ defaultEndpoint = {
     #"userdata": None,
     #"protocol": "MQTTv311",
     #"transport": "tcp",
+    # ssl is still set to Insecure! Todo add vert files
+    "ssl": False,
     "server": "mqtt.local",
+    # if ssl is True, change to mqtt ssl port 8883
     "port": 1883,
+    # set name and password if necessary 
+    "username": None,
+    "password": None,
     "keepalive": 60,
     #"bind_address": "",
     "topic_root": "AutoPi/", # Note: this should have a slash at the end
-    "qos": 2, # 1 or 2 is probably recommended, 0 will most likely lose items if connectivity is intermittent
+    "qos": 1, # 1 or 2 is probably recommended, 0 will most likely lose items if connectivity is intermittent
     "retain": False
 }
 
@@ -253,6 +259,17 @@ class MqttCache(object):
         # Publish the data to MQTT
         mqttClient = mqtt.Client(endpoint["client_id"], clean_session=endpoint["clean_session"])
         mqttClient.enable_logger(log)
+        if endpoint["username"] is not None:
+            mqttClient.username_pw_set(endpoint["username"], endpoint["password"])
+        if endpoint["ssl"]:
+            try:
+                import ssl
+            except ImportError:
+                log.warning("Error importing SSL")
+            mqttClient.tls_set(ca_certs=None, certfile=None, keyfile=None, cert_reqs=ssl.CERT_REQUIRED,
+                               tls_version=ssl.PROTOCOL_TLS, ciphers=None)
+            mqttClient.tls_insecure_set(True)  # todo change to secure options, handling with certfiles
+            
         mqttClient.on_publish = self._on_publish
         mqttClient.connect(endpoint["server"], port=endpoint["port"], keepalive=endpoint["keepalive"])
 
