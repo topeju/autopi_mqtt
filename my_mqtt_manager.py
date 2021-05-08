@@ -48,7 +48,7 @@ def cache_handler(cmd, *args, **kwargs):
 
 
 @edmp.register_hook()
-def sleep_handler(result):
+def sleep_handler():
     """
     Stops the client loop to allow the system to go to sleep
     """
@@ -58,7 +58,7 @@ def sleep_handler(result):
 
 
 @edmp.register_hook()
-def wake_handler(result):
+def wake_handler():
     """
     Reconnects the client when the system wakes up again
     """
