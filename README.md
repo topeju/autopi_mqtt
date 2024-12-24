@@ -1,5 +1,7 @@
 # autopi_mqtt
 
+***This project is archived: I don't personally use AutoPi anymore, and have no idea if there have been changes in AutoPi in the last three years that would affect this project (or make it unnecessary).***
+
 MQTT returner, cache and management service for [AutoPi](https://www.autopi.io/). As of AutoPi version 2021.03.10, AutoPi can call multiple returners, so the support to publish data both to MQTT and the AutoPi cloud has been removed. The same AutoPi version also adds support for MQTT natively, but I have not been able to get it to work yet, and in any case the configuration available is somewhat limited.
 
 You will obviously need an MQTT broker set up somewhere -- setting one up is outside the scope of this documentation (see, e.g., [Mosquitto](https://mosquitto.org/)). This service does not need to be continuously connected to the MQTT broker, but will queue data in the Redis cache in AutoPi and publishes it when it is able to connect.
